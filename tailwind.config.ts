@@ -9,10 +9,25 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+		fontFamily: {
+			playfair: ['var(--font-playfair)'],
+			lora: ['var(--font-lora)'],
+		  },
+		  backgroundImage: {
+			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+			'gradient-conic':
+			  'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+		  },
 		animation: {
 			fadeIn: 'fadeIn 0.5s ease-in-out forwards',
+			ripple: 'ripple 2s cubic-bezier(0, 0.2, 0.8, 1) infinite',
 		  },
 		  keyframes: {
+			ripple:{
+              '0%': { transform: 'scale(0)' ,opacity: '1' },
+			  '100%': { transform: 'scale(4)', opacity: '0' },
+
+			},
 			fadeIn: {
 			  '0%': { opacity: '0' },
 			  '100%': { opacity: '1' },

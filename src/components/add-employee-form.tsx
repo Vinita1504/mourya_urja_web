@@ -9,47 +9,76 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
+  
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import RoleSelectionCheckbox from "./role-selection-checkbox";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { useEmployeeStore } from "@/stores/employee-store";
+import { companyNames } from "@/shared/constant";
+import { Label } from "./ui/label";
+import PageSelectionCheckbox from "./page-selection-checkbox";
+import { IEmployee } from "@/models/employee-model";
+import { Replace } from "lucide-react"
+import usePasswordStore from "@/stores/password-store";
 
 const AddEmployeeForm = () => {
-  const { employee } = useEmployeeStore();
+  const { employee, saveEmployee } = useEmployeeStore();
+  const {generate12DigPassword } = usePasswordStore();
 
   // Initialize the form with defaultValues
-  const form = useForm({
+  const form = useForm<IEmployee>({
     defaultValues: {
-      firstname: "",
-      lastname: "",
+      employeeId: "",
+      companyName: "",
+      firstName: "",
+      lastName: "",
       email: "",
-      role: "",
-      phone: "",
+      role: "employee",
+      phoneNumber: "",
       designation: "",
-      posting: "",
-      access: "",
+      postingPlace: "",
+      access: ["/addemployee"] as [(string | undefined)?],
       post: "",
+      password: "",
     },
   });
 
+  const updatePassword = ()=>{
+    const newPassword = generate12DigPassword()
+    form.setValue("password", newPassword)
+  }
+
   // Handle form submission
   function onSubmit(values: FieldValues) {
-    console.log(values);
+    const employeeData: IEmployee = values as IEmployee;
+    console.log(employeeData)
+    // return;
+    saveEmployee(employeeData);
   }
 
   // Populate form with employee data
   useEffect(() => {
     if (employee) {
       form.reset({
-        firstname: employee.firstName || "",
-        lastname: employee.lastName || "",
+        employeeId: employee.employeeId || "",
+        companyName: employee.companyName || "",
+        firstName: employee.firstName || "",
+        lastName: employee.lastName || "",
         email: employee.email || "",
         role: employee.role || "",
-        phone: employee.phoneNumber || "",
+        phoneNumber: employee.phoneNumber || "",
         designation: employee.designation || "",
-        posting: employee.postingPlace || "",
-        // access: employee.access || [],
+        postingPlace: employee.postingPlace || "",
+        access: employee.access || [],
         post: employee.post || "",
+        password: employee.password || "",
       });
     }
   }, [employee, form]);
@@ -58,19 +87,65 @@ const AddEmployeeForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="py-4 px-8 border border-border shadow-sm rounded-lg"
+        className="py-4 space-y-4 px-8 border border-border shadow-sm rounded-lg"
       >
         <div className="grid grid-cols-2 gap-8">
           <FormField
             control={form.control}
-            name="firstname"
+            name="employeeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="firstname">First Name</FormLabel>
+                <FormLabel htmlFor="employeeId">Employee ID</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    id="firstname"
+                    id="employeeId"
+                    placeholder="Enter Employee ID"
+                    type="text"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="companyName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="companyName">Company Name</FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Company Name"></SelectValue>
+                      <SelectContent>
+                        {companyNames.map((companyName, index) => {
+                          return (
+                            <SelectItem key={index} value={companyName.value}>
+                              {companyName.label}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </SelectTrigger>
+                  </Select>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="firstName">First Name</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    id="firstName"
                     placeholder="Enter your First Name"
                     type="text"
                   />
@@ -80,14 +155,14 @@ const AddEmployeeForm = () => {
           />
           <FormField
             control={form.control}
-            name="lastname"
+            name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="lastname">Last Name</FormLabel>
+                <FormLabel htmlFor="lastName">Last Name</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    id="lastname"
+                    id="lastName"
                     placeholder="Enter your Last Name"
                     type="text"
                   />
@@ -114,14 +189,14 @@ const AddEmployeeForm = () => {
           />
           <FormField
             control={form.control}
-            name="phone"
+            name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="phone">Phone Number</FormLabel>
+                <FormLabel htmlFor="phoneNumber">Phone Number</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    id="phone"
+                    id="phoneNumber"
                     placeholder="Enter your Phone Number"
                     type="text"
                   />
@@ -163,17 +238,16 @@ const AddEmployeeForm = () => {
               </FormItem>
             )}
           />
-          <RoleSelectionCheckbox />
           <FormField
             control={form.control}
-            name="posting"
+            name="postingPlace"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="posting">Posting Place</FormLabel>
+                <FormLabel htmlFor="postingPlace">Posting Place</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    id="posting"
+                    id="postingPlace"
                     placeholder="Enter your Posting Place"
                     type="text"
                   />
@@ -181,7 +255,40 @@ const AddEmployeeForm = () => {
               </FormItem>
             )}
           />
+          <div className="flex items-center ">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="password">Password</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Enter or generate your password"
+                  
+                  /> 
+                </FormControl>
+                <FormMessage>
+                    {form.formState.errors.password?.message}
+                  </FormMessage>
+              </FormItem>
+            )}
+          />
+          <Button 
+            type="button"
+            onClick={updatePassword}
+            className="mt-8 mx-2"><Replace/></Button>
+          </div>
         </div>
+
+        <div>
+          <Label>Page Access</Label>
+          <div className="flex gap-4">
+            <PageSelectionCheckbox />
+          </div>
+        </div>
+
         <div className="my-8 flex gap-4">
           <Button type="submit" className="w-28">
             Save

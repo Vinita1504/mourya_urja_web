@@ -1,64 +1,102 @@
 'use client'
-import {
-  Card,
-  CardHeader,
-  CardContent,
-} from "../ui/card";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "../ui/select";
-import { Input } from "../ui/input";
-import React from "react";
-import { FormProvider, useForm } from "react-hook-form";
-import { CardTitle } from "../ui/card";
-import { FormField, FormItem, FormLabel, FormMessage ,  FormControl,
-} from "../ui/form";
-import { Textarea } from "../ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { userPersonalInfoSchema } from "@/schema/user-personal-info-schema";
-import { Button } from '../ui/button'
+import React, {useEffect} from "react";
+import {Card, CardContent, CardHeader, CardTitle,} from "../ui/card";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "../ui/select";
+import {Input} from "../ui/input";
+import {FieldValues, FormProvider, useForm} from "react-hook-form";
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "../ui/form";
+import {Textarea} from "../ui/textarea";
+import {zodResolver} from "@hookform/resolvers/zod";
+// import { z } from "zod";
+import {userPersonalInfoSchema} from "@/schema/user-personal-info-schema";
+import {Button} from '../ui/button';
+import ImageView from '@/components/add-user/image-view'; // Ensure the path is correct or create the module if it doesn't exist
+import useUserStore, {useFetchUserStore} from "@/stores/user-store";
+import {IPersonalInfo,} from "@/models/user-model";
+
+
 
 const PersonalInformation = () => {
 
-  const form = useForm<z.infer<typeof userPersonalInfoSchema>>({
-    resolver: zodResolver(userPersonalInfoSchema),
-    defaultValues:{
+  const {personalInfo , addPersonalInfo} = useUserStore()
+  const {isProcessing } = useFetchUserStore();
 
-    }
+  
+
+ 
+
+  const form = useForm({
+    resolver: zodResolver(userPersonalInfoSchema),
+    defaultValues: {
+      firstName: personalInfo.firstName ||"",
+      middleName: personalInfo.middleName ||"",
+      lastName: personalInfo.lastName ||"",          
+      gender:  personalInfo.gender || "male",
+      dob: personalInfo.dob || "",
+      bloodGroup: personalInfo.bloodGroup || "",
+      height: personalInfo.height?.toString() || "",
+      weight: personalInfo.weight?.toString() || "",
+      complexion: personalInfo.complexion || "",
+      hobbies: personalInfo.hobbies?.join(",") || "",
+      aboutMe: personalInfo.aboutMe || "",
+      profileImages: personalInfo.profileImages || [],
+    },
   });
 
-  const onSubmit = (data: z.infer<typeof userPersonalInfoSchema>) => {
-    console.log(data);
+  useEffect(() => {
+    
+    form.reset({
+      ...personalInfo,
+      profileImages: personalInfo.profileImages || [],
+      gender: personalInfo.gender || "male",
+      dob: personalInfo.dob ?  new Date(personalInfo.dob).toISOString().split('T')[0] : "",
+      height: personalInfo.height?.toString() || "",
+      weight: personalInfo.weight?.toString() || "",
+      hobbies: personalInfo.hobbies?.join(",") || "",
+    })
+  },[isProcessing, form, personalInfo])
+
+
+
+ 
+  const onSubmit = (data: FieldValues) => {
+      data.hobbies = data.hobbies.split(",").map((hobby: string) => hobby.trim());
+    const height = parseInt(data.height ?? "0");
+    const weight = parseInt(data.weight?? "0");
+    data.height = height;
+    data.weight = weight;
+    console.log("user data ", data);
+    addPersonalInfo(data as IPersonalInfo)
   };
-  return (
+
+  if(isProcessing) return <div>Loading...</div>
+
+  
+  return ( 
+    <FormProvider {...form}>
     <Card className="my-6">
       <CardHeader>
         <CardTitle>Personal Information</CardTitle>
       </CardHeader>
       <CardContent>
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+       
+          <form  onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="fullName"
+                name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="fullName">Full Name</FormLabel>
+                    <FormLabel htmlFor="firstName">Full Name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        id="fullName"
+                        id="firstName"
                         placeholder="Enter Full Name"
                       />
                     </FormControl>
                     <FormMessage>
-                      {form.formState.errors.fullName?.message}
+                      {form.formState.errors.firstName?.message}
                     </FormMessage>
                   </FormItem>
                 )}
@@ -135,7 +173,12 @@ const PersonalInformation = () => {
                   <FormItem>
                     <FormLabel htmlFor="dob">Date of Birth</FormLabel>
                     <FormControl>
-                      <Input {...field} id="dob" type="date" />
+                      <Input {...field} 
+                      value={field.value}
+                      id="dob" type="date"
+                      min={new Date("1970-01-01").toISOString().split('T')[0]}
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                      />
                     </FormControl>
                     <FormMessage>
                       {form.formState.errors.dob?.message}
@@ -155,7 +198,7 @@ const PersonalInformation = () => {
                         defaultValue={field.value}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select Blood Group" />
+                          <SelectValue placeholder={field.value ?? "Select Blood Group"} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="A+">A+</SelectItem>
@@ -183,6 +226,7 @@ const PersonalInformation = () => {
                     <FormLabel htmlFor="height">Height</FormLabel>
                     <FormControl>
                       <Input
+                        type="number"
                         {...field}
                         id="height"
                         placeholder="Enter Height"
@@ -202,6 +246,7 @@ const PersonalInformation = () => {
                     <FormLabel htmlFor="weight">Weight</FormLabel>
                     <FormControl>
                       <Input
+                        type="number"
                         {...field}
                         id="weight"
                         placeholder="Enter Weight"
@@ -271,17 +316,14 @@ const PersonalInformation = () => {
                 </FormItem>
               )}
             />
-            <div>
-              <FormLabel>Upload Images (up to 5)</FormLabel>
-              <input type="file" multiple accept="image/*" />
-            </div>
-            <div className="flex justify-end">
-                <Button type="submit">Save</Button>
-              </div>
+             <ImageView params={{ profileImages: personalInfo.profileImages }}/>
+            <Button type="submit">Save</Button>
+             
           </form>
-        </FormProvider>
+        
       </CardContent>
     </Card>
+  </FormProvider>
   );
 };
 

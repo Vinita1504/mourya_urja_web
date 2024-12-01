@@ -12,26 +12,26 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { Home, User, Users, ClipboardCheck, HelpCircle, LogOut, FileText, Shield } from 'lucide-react';
+import { Home, User, Users, ClipboardCheck, LogOut, FileText, Shield } from 'lucide-react';
 import { Separator } from "./ui/separator"
 
 import { useAuthStore } from "@/stores/auth-store";
+import { usePathname } from 'next/navigation';
+
 
 export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
-  const [activeMenu, setActiveMenu] = React.useState<string | null>(null);
+
+  const pathname = usePathname();
+
 
   const {logout} = useAuthStore()
 
   React.useEffect(() => {
-    const savedActiveMenu = localStorage.getItem('activeMenu');
-    if (savedActiveMenu) {
-      setActiveMenu(savedActiveMenu);
-    }
+   
   }, []);
 
   const handleMenuClick = (path: string) => {
-    setActiveMenu(path);
-    localStorage.setItem('activeMenu', path);
+    console.log(path)
   };
 
   const menus = [
@@ -52,7 +52,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
     },
     {
       title: 'Users',
-      path: `${isAdmin ? '/management/users' : '/admin/users'}`,
+      path: `/users`,
       icon: Users
     },
     {
@@ -61,9 +61,9 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
       icon: ClipboardCheck
     },
     {
-      title: 'Enquiry',
-      path: '/admin/enquiry',
-      icon: HelpCircle
+      title:"Forget Password",
+      path:"/forget-password",
+      icon:Shield,
     },
     {
       title: 'Privacy Policy',
@@ -105,7 +105,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
             <SidebarMenu>
               {menus.map((item) => (
                 <SidebarMenuItem key={item.title} className="text-lg font-semibold">
-                  <SidebarMenuButton asChild isActive={item.path === activeMenu}>
+                  <SidebarMenuButton asChild isActive={item.path === pathname}>
                     <a href={item.path} onClick={() => {
                       if(item.title === 'Logout'){
                         logout()

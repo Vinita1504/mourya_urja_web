@@ -1,8 +1,22 @@
-export const baseUrl = 'http://192.168.1.42:3000/v1'; 
 
-export const userEndPoint =  `${baseUrl}/users`;
 
-export const employeeEndPoint =  `${baseUrl}/employee`;
-export const employeeProfileEndPoint = `${employeeEndPoint}/profile`;
+export const userEndPoint =  '/users';
+export const registerUser = `${userEndPoint}/register`
+export const preSignedUrl = `${userEndPoint}/presigned-url`
+export const getUsers = `/all-users`
+export const deleteImage = `${userEndPoint}/delete-file`
+export const userProfileById= `${userEndPoint}/profile`
+export const browseProfiles = `${userEndPoint}/find-new-connections`
+export const deleteUser = `${userEndPoint}/delete-user`
 
-export const loginEndPoint = `${baseUrl}/login`;
+
+export const employeeEndPoint =  '/employee';
+export const registerEmployeeEndPoint = '/register'
+export const employeeProfileEndPoint = `/profile`;
+export const userByEmail = '/user'
+
+
+// fetch all employees
+export const allEmployeesEndpoint = '/all-employee'
+
+export const loginEndPoint = '/login';

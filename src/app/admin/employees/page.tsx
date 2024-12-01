@@ -16,153 +16,29 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
+import { useEmployeeStore } from "@/stores/employee-store";
+import TableLoader  from "@/components/skeleton-loaders/table-loader";
+import { Dialog } from "@/components/ui/dialog";
+import ErrorDialog from "@/components/dialogs/error-dialog";
 
-const data: Employees[] = [
-  {
-    id: "E001",
-    name: "John Doe",
-    designation: "Software Engineer",
-    // post: "Developer",
-    email: "johndoe@example.com",
-    phoneNumber: "123-456-7890",
-    status: "Active",
-  },
-  {
-    id: "E002",
-    name: "Jane Smith",
-    designation: "Project Manager",
-    // post: "Manager",
-    email: "janesmith@example.com",
-    phoneNumber: "987-654-3210",
-    status: "Active",
-  },
-  {
-    id: "E003",
-    name: "Alice Brown",
-    designation: "UI/UX Designer",
-    // post: "Designer",
-    email: "alicebrown@example.com",
-    phoneNumber: "456-789-0123",
-    status: "In-Active",
-  },
-  {
-    id: "E004",
-    name: "Bob Green",
-    designation: "Quality Analyst",
-    // post: "QA",
-    email: "bobgreen@example.com",
-    phoneNumber: "789-012-3456",
-    status: "Active",
-  },
-  {
-    id: "E005",
-    name: "Charlie White",
-    designation: "Product Manager",
-    // post: "Manager",
-    email: "charliewhite@example.com",
-    phoneNumber: "234-567-8901",
-    status: "In-Active",
-  },
-  {
-    id: "E006",
-    name: "Daisy Black",
-    designation: "Backend Developer",
-    // post: "Developer",
-    email: "daisyblack@example.com",
-    phoneNumber: "890-123-4567",
-    status: "Active",
-  },
-  {
-    id: "E007",
-    name: "Eve Adams",
-    designation: "Frontend Developer",
-    // post: "Developer",
-    email: "eveadams@example.com",
-    phoneNumber: "567-890-1234",
-    status: "Active",
-  },
-  {
-    id: "E008",
-    name: "Franklin Grey",
-    designation: "HR Manager",
-    // post: "HR",
-    email: "franklingrey@example.com",
-    phoneNumber: "345-678-9012",
-    status: "In-Active",
-  },
-  {
-    id: "E009",
-    name: "Grace King",
-    designation: "System Administrator",
-    // post: "Admin",
-    email: "graceking@example.com",
-    phoneNumber: "678-901-2345",
-    status: "Active",
-  },
-  {
-    id: "E010",
-    name: "Henry Moore",
-    designation: "Data Analyst",
-    // post: "Analyst",
-    email: "henrymoore@example.com",
-    phoneNumber: "901-234-5678",
-    status: "Active",
-  },
-  {
-    id: "E011",
-    name: "Ivy Hall",
-    designation: "Machine Learning Engineer",
-    // post: "Developer",
-    email: "ivyhall@example.com",
-    phoneNumber: "234-567-8901",
-    status: "In-Active",
-  },
-  {
-    id: "E012",
-    name: "Jack Lewis",
-    designation: "Network Engineer",
-    // post: "Engineer",
-    email: "jacklewis@example.com",
-    phoneNumber: "890-123-4567",
-    status: "Active",
-  },
-  {
-    id: "E013",
-    name: "Karen Young",
-    designation: "DevOps Engineer",
-    // post: "Engineer",
-    email: "karenyoung@example.com",
-    phoneNumber: "567-890-1234",
-    status: "Active",
-  },
-  {
-    id: "E014",
-    name: "Liam Scott",
-    designation: "Technical Support",
-    // post: "Support",
-    email: "liamscott@example.com",
-    phoneNumber: "345-678-9012",
-    status: "In-Active",
-  },
-  {
-    id: "E015",
-    name: "Mia Clark",
-    designation: "Content Writer",
-    // post: "Writer",
-    email: "miaclark@example.com",
-    phoneNumber: "678-901-2345",
-    status: "Active",
-  },
-];
+
 const EmployeesPage = () => {
+
   const router = useRouter();
- 
+  
+  const {getEmployees,getEmployeeTableData , isProcessing, showError,simulateError, errorMsg} = useEmployeeStore()
+
+  const [employeesTableData, setEmployeesTableData] = React.useState<Employees[]>([]);
+  
+  // const dataRef = React.useRef<Employees[]>([]);
 
   useEffect(()=>{
+    getEmployees().then((value)=>{
+      const data = getEmployeeTableData(value)
+      setEmployeesTableData(data)
+    })  // fetch employees data from the API or store when page loads for the first time  // call the getEmployees hook from the employee store
    
-  
-   
-  },)
+  },[getEmployees,getEmployeeTableData]);
   return (
     <div className=" pt-20 flex flex-1 flex-col gap-4 p-4">
       <h1 className="text-3xl font-semibold">Manage Employees</h1>
@@ -192,7 +68,21 @@ const EmployeesPage = () => {
         </Button>
       </div>
       <div className="container mx-auto pb-10 px-4">
-        <DataTable columns={columns} data={data} />
+       {isProcessing && <TableLoader/>}
+
+        {employeesTableData.length > 0  || errorMsg !== null  ?<DataTable columns={columns} data={employeesTableData} />: <TableLoader/>}
+        <Dialog open={showError} onOpenChange={simulateError}>
+            <ErrorDialog
+              title="Request Failed"
+              message="We couldn't process your request. Please check your connection and try again."
+              onRetry={()=>{ 
+                simulateError(false)
+               }}
+              onCancel={()=>{ simulateError(false)}}
+              retryButtonText="Try Again"
+              cancelButtonText="Close"
+            />
+        </Dialog>
       </div>
     </div>
   );
